@@ -67,7 +67,7 @@ QPdfViewPrivate::QPdfViewPrivate()
 void QPdfViewPrivate::init()
 {
     Q_Q(QPdfView);
-
+    qDebug() << "V 1.----";
     m_pageNavigation = new QPdfPageNavigation(q);
     m_pageRenderer = new QPdfPageRenderer(q);
     m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
@@ -160,7 +160,6 @@ void QPdfViewPrivate::updateScrollBars()
 void QPdfViewPrivate::pageRendered(int pageNumber, QSize imageSize, const QImage &image, quint64 requestId)
 {
     Q_Q(QPdfView);
-
     Q_UNUSED(imageSize)
     Q_UNUSED(requestId)
 
@@ -287,7 +286,7 @@ QPdfView::QPdfView(QWidget *parent)
 
     connect(d->m_pageRenderer, &QPdfPageRenderer::pageRendered,
             this, [d](int pageNumber, QSize imageSize, const QImage &image, QPdfDocumentRenderOptions, quint64 requestId){ d->pageRendered(pageNumber, imageSize, image, requestId); });
-
+    qDebug() << "CALLED ";
     verticalScrollBar()->setSingleStep(20);
     horizontalScrollBar()->setSingleStep(20);
 

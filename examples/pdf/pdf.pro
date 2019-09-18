@@ -1,2 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS += pdfviewer
+SUBDIRS += pdfviewer \
+        qmlpdfviewer

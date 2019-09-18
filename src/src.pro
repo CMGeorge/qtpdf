@@ -3,7 +3,8 @@ TEMPLATE = subdirs
 src_pdf.subdir = pdf
 src_pdf.depends = lib
 
-SUBDIRS = lib src_pdf
+SUBDIRS = lib src_pdf \
+    pdfqml
 
 qtHaveModule(widgets) {
     src_pdfwidgets.subdir = pdfwidgets
