@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 Klarälvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Tobias König <tobias.koenig@kdab.com>
+** Copyright (C) 2017 Klarälvdalens Datakonsult AB, a KDAB Group company,
+*info@kdab.com, author Tobias König <tobias.koenig@kdab.com>
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtPDF module of the Qt Toolkit.
@@ -40,33 +41,41 @@
 #include "qpdfpagerenderer.h"
 
 #include <QGuiApplication>
+#include <QPainter>
 #include <QPdfDocument>
 #include <QPdfPageNavigation>
 #include <QScreen>
+#ifdef QML_BUILD
+#include <QQuickPaintedItem>
+#else
 #include <QScrollBar>
 #include <QScroller>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 QPdfViewPrivate::QPdfViewPrivate()
-    : QAbstractScrollAreaPrivate()
-    , m_document(nullptr)
-    , m_pageNavigation(nullptr)
-    , m_pageRenderer(nullptr)
-    , m_pageMode(QPdfView::SinglePage)
-    , m_zoomMode(QPdfView::CustomZoom)
-    , m_zoomFactor(1.0)
-    , m_pageSpacing(3)
-    , m_documentMargins(6, 6, 6, 6)
-    , m_blockPageScrolling(false)
-    , m_pageCacheLimit(20)
-    , m_screenResolution(QGuiApplication::primaryScreen()->logicalDotsPerInch() / 72.0)
-{
+    :
+#ifdef QML_BUILD
+      QQuickPaintedItemPrivate()
+#else
+      QAbstractScrollAreaPrivate()
+#endif
+      ,
+      m_document(nullptr), m_pageNavigation(nullptr), m_pageRenderer(nullptr),
+      m_pageMode(QPdfView::SinglePage), m_zoomMode(QPdfView::CustomZoom),
+      m_zoomFactor(1.0), m_pageSpacing(3), m_documentMargins(6, 6, 6, 6),
+      m_blockPageScrolling(false), m_pageCacheLimit(20),
+      m_screenResolution(
+          QGuiApplication::primaryScreen()->logicalDotsPerInch() / 72.0) {
 }
 
-void QPdfViewPrivate::init()
-{
+void QPdfViewPrivate::init() {
+#ifdef QML_BUILD
     Q_Q(QPdfView);
+#else
+    Q_Q(QPdfView);
+#endif
     qDebug() << "V 1.----";
     m_pageNavigation = new QPdfPageNavigation(q);
     m_pageRenderer = new QPdfPageRenderer(q);
@@ -75,6 +84,7 @@ void QPdfViewPrivate::init()
 
 void QPdfViewPrivate::documentStatusChanged()
 {
+    qDebug() << "Document status changed";
     updateDocumentLayout();
     invalidatePageCache();
 }
@@ -85,9 +95,9 @@ void QPdfViewPrivate::currentPageChanged(int currentPage)
 
     if (m_blockPageScrolling)
         return;
-
+#ifndef QML_BUILD
     q->verticalScrollBar()->setValue(yPositionForPage(currentPage));
-
+#endif
     if (m_pageMode == QPdfView::SinglePage)
         invalidateDocumentLayout();
 }
@@ -95,11 +105,17 @@ void QPdfViewPrivate::currentPageChanged(int currentPage)
 void QPdfViewPrivate::calculateViewport()
 {
     Q_Q(QPdfView);
-
+#ifdef QML_BUILD
+    const int x = 0;
+    const int y = 0;
+    const int width = q->width();
+    const int height = q->height();
+#else
     const int x = q->horizontalScrollBar()->value();
     const int y = q->verticalScrollBar()->value();
     const int width = q->viewport()->width();
     const int height = q->viewport()->height();
+#endif
 
     setViewport(QRect(x, y, width, height));
 }
@@ -125,7 +141,9 @@ void QPdfViewPrivate::setViewport(QRect viewport)
         // An imaginary, 2px height line at the upper half of the viewport, which is used to
         // determine which page is currently located there -> we propagate that as 'current' page
         // to the QPdfPageNavigation object
-        const QRect currentPageLine(m_viewport.x(), m_viewport.y() + m_viewport.height() * 0.4, m_viewport.width(), 2);
+        const QRect currentPageLine(m_viewport.x(),
+                                    m_viewport.y() + m_viewport.height() * 0.4,
+                                    m_viewport.width(), 2);
 
         int currentPage = 0;
         for (auto it = m_documentLayout.pageGeometries.cbegin(); it != m_documentLayout.pageGeometries.cend(); ++it) {
@@ -148,13 +166,14 @@ void QPdfViewPrivate::updateScrollBars()
 {
     Q_Q(QPdfView);
 
+#ifndef QML_BUILD
     const QSize p = q->viewport()->size();
     const QSize v = m_documentLayout.documentSize;
-
     q->horizontalScrollBar()->setRange(0, v.width() - p.width());
     q->horizontalScrollBar()->setPageStep(p.width());
     q->verticalScrollBar()->setRange(0, v.height() - p.height());
     q->verticalScrollBar()->setPageStep(p.height());
+#endif
 }
 
 void QPdfViewPrivate::pageRendered(int pageNumber, QSize imageSize, const QImage &image, quint64 requestId)
@@ -172,7 +191,11 @@ void QPdfViewPrivate::pageRendered(int pageNumber, QSize imageSize, const QImage
 
     m_pageCache.insert(pageNumber, image);
 
+#ifdef QML_BUILD
+    q->update();
+#elif
     q->viewport()->update();
+#endif
 }
 
 void QPdfViewPrivate::invalidateDocumentLayout()
@@ -186,16 +209,24 @@ void QPdfViewPrivate::invalidatePageCache()
     Q_Q(QPdfView);
 
     m_pageCache.clear();
+#ifdef QML_BUILD
+    q->update();
+#elif
     q->viewport()->update();
+#endif
 }
 
 QPdfViewPrivate::DocumentLayout QPdfViewPrivate::calculateDocumentLayout() const
 {
-    // The DocumentLayout describes a virtual layout where all pages are positioned inside
-    //    - For SinglePage mode, this is just an area as large as the current page surrounded
+    // The DocumentLayout describes a virtual layout where all pages are
+    // positioned inside
+    //    - For SinglePage mode, this is just an area as large as the current
+    //    page surrounded
     //      by the m_documentMargins.
-    //    - For MultiPage mode, this is the area that is covered by all pages which are placed
-    //      below each other, with m_pageSpacing inbetween and surrounded by m_documentMargins
+    //    - For MultiPage mode, this is the area that is covered by all pages
+    //    which are placed
+    //      below each other, with m_pageSpacing inbetween and surrounded by
+    //      m_documentMargins
 
     DocumentLayout documentLayout;
 
@@ -208,8 +239,12 @@ QPdfViewPrivate::DocumentLayout QPdfViewPrivate::calculateDocumentLayout() const
 
     int totalWidth = 0;
 
-    const int startPage = (m_pageMode == QPdfView::SinglePage ? m_pageNavigation->currentPage() : 0);
-    const int endPage = (m_pageMode == QPdfView::SinglePage ? m_pageNavigation->currentPage() + 1 : pageCount);
+    const int startPage =
+        (m_pageMode == QPdfView::SinglePage ? m_pageNavigation->currentPage()
+                                            : 0);
+    const int endPage = (m_pageMode == QPdfView::SinglePage
+                             ? m_pageNavigation->currentPage() + 1
+                             : pageCount);
 
     // calculate page sizes
     for (int page = startPage; page < endPage; ++page) {
@@ -221,9 +256,13 @@ QPdfViewPrivate::DocumentLayout QPdfViewPrivate::calculateDocumentLayout() const
             const qreal factor = (qreal(m_viewport.width() - m_documentMargins.left() - m_documentMargins.right()) / qreal(pageSize.width()));
             pageSize *= factor;
         } else if (m_zoomMode == QPdfView::FitInView) {
-            const QSize viewportSize(m_viewport.size() + QSize(-m_documentMargins.left() - m_documentMargins.right(), -m_pageSpacing));
+            const QSize viewportSize(
+                m_viewport.size() +
+                QSize(-m_documentMargins.left() - m_documentMargins.right(),
+                      -m_pageSpacing));
 
-            pageSize = QSizeF(m_document->pageSize(page) * m_screenResolution).toSize();
+            pageSize = QSizeF(m_document->pageSize(page) * m_screenResolution)
+                           .toSize();
             pageSize = pageSize.scaled(viewportSize, Qt::KeepAspectRatio);
         }
 
@@ -241,7 +280,8 @@ QPdfViewPrivate::DocumentLayout QPdfViewPrivate::calculateDocumentLayout() const
         const QSize pageSize = pageGeometries[page].size();
 
         // center horizontal inside the viewport
-        const int pageX = (qMax(totalWidth, m_viewport.width()) - pageSize.width()) / 2;
+        const int pageX =
+            (qMax(totalWidth, m_viewport.width()) - pageSize.width()) / 2;
 
         pageGeometries[page].moveTopLeft(QPoint(pageX, pageY));
 
@@ -274,33 +314,72 @@ void QPdfViewPrivate::updateDocumentLayout()
     updateScrollBars();
 }
 
-
+#ifdef QML_BUILD
+QPdfView::QPdfView(QQuickItem *parent)
+    : QQuickPaintedItem(*new QPdfViewPrivate(), parent)
+#elif
 QPdfView::QPdfView(QWidget *parent)
     : QAbstractScrollArea(*new QPdfViewPrivate(), parent)
+#endif
 {
     Q_D(QPdfView);
 
     d->init();
 
-    connect(d->m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this, [d](int page){ d->currentPageChanged(page); });
+    connect(d->m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this,
+            [d](int page) { d->currentPageChanged(page); });
 
-    connect(d->m_pageRenderer, &QPdfPageRenderer::pageRendered,
-            this, [d](int pageNumber, QSize imageSize, const QImage &image, QPdfDocumentRenderOptions, quint64 requestId){ d->pageRendered(pageNumber, imageSize, image, requestId); });
+    connect(d->m_pageRenderer, &QPdfPageRenderer::pageRendered, this,
+            [d](int pageNumber, QSize imageSize, const QImage &image,
+                QPdfDocumentRenderOptions, quint64 requestId) {
+                d->pageRendered(pageNumber, imageSize, image, requestId);
+            });
     qDebug() << "CALLED ";
+#ifndef QML_BUILD
     verticalScrollBar()->setSingleStep(20);
     horizontalScrollBar()->setSingleStep(20);
 
     QScroller::grabGesture(this);
-
+#endif
     d->calculateViewport();
 }
 
 /*!
   \internal
 */
+#ifdef QML_BUILD
+QPdfView::QPdfView(QPdfViewPrivate &dd, QQuickItem *parent)
+    : QQuickPaintedItem(dd, parent)
+#else
 QPdfView::QPdfView(QPdfViewPrivate &dd, QWidget *parent)
     : QAbstractScrollArea(dd, parent)
+#endif
 {
+}
+
+void QPdfView::paint(QPainter *painter) {
+    Q_D(QPdfView);
+    qDebug() << "In Paint...";
+    qDebug() << "m_documentLayout = " << d->m_documentLayout.pageGeometries;
+    painter->fillRect(QRect(0, 0, size().width(), size().height()), "white");
+    for (auto it = d->m_documentLayout.pageGeometries.cbegin();
+         it != d->m_documentLayout.pageGeometries.cend(); ++it) {
+        const QRect pageGeometry = it.value();
+        //        if (pageGeometry.intersects(d->m_viewport)) { // page needs to
+        //        be painted
+        painter->fillRect(pageGeometry, Qt::white);
+        const int page = it.key();
+        qDebug() << " m_pageCache " << d->m_pageCache;
+        const auto pageIt = d->m_pageCache.constFind(page);
+        if (pageIt != d->m_pageCache.cend()) {
+            qDebug() << "Should precess page... ";
+            const QImage &img = pageIt.value();
+            painter->drawImage(pageGeometry.topLeft(), img);
+        } else {
+            d->m_pageRenderer->requestPage(page, pageGeometry.size());
+        }
+        //}
+    }
 }
 
 QPdfView::~QPdfView()
@@ -321,7 +400,9 @@ void QPdfView::setDocument(QPdfDocument *document)
     emit documentChanged(d->m_document);
 
     if (d->m_document)
-        d->m_documentStatusChangedConnection = connect(d->m_document.data(), &QPdfDocument::statusChanged, this, [d](){ d->documentStatusChanged(); });
+        d->m_documentStatusChangedConnection =
+            connect(d->m_document.data(), &QPdfDocument::statusChanged, this,
+                    [d]() { d->documentStatusChanged(); });
 
     d->m_pageNavigation->setDocument(d->m_document);
     d->m_pageRenderer->setDocument(d->m_document);
@@ -369,7 +450,18 @@ QPdfView::ZoomMode QPdfView::zoomMode() const
 
     return d->m_zoomMode;
 }
+void QPdfView::setUrl(QString url) {
+    Q_D(QPdfView);
+    if (m_url == url)
+        return;
 
+    m_url = url;
+    emit urlChanged(m_url);
+    //    d->m_document.data()->load(QUrl(m_url));
+    QPdfDocument *_newPDF = new QPdfDocument(this);
+    _newPDF->load("/Users/cmgeorge/Downloads/printpreview.pdf");
+    setDocument(_newPDF);
+}
 void QPdfView::setZoomMode(ZoomMode mode)
 {
     Q_D(QPdfView);
@@ -446,12 +538,21 @@ void QPdfView::setDocumentMargins(QMargins margins)
 void QPdfView::paintEvent(QPaintEvent *event)
 {
     Q_D(QPdfView);
-
+#ifdef QML_BUILD
+    QPainter painter(nullptr);
+#else
     QPainter painter(viewport());
+#endif
+#ifdef QML_BUILD
+    painter.fillRect(event->rect(), "darkgray");
+    painter.translate(-d->x, -d->y);
+#elif
     painter.fillRect(event->rect(), palette().brush(QPalette::Dark));
     painter.translate(-d->m_viewport.x(), -d->m_viewport.y());
+#endif
 
-    for (auto it = d->m_documentLayout.pageGeometries.cbegin(); it != d->m_documentLayout.pageGeometries.cend(); ++it) {
+    for (auto it = d->m_documentLayout.pageGeometries.cbegin();
+         it != d->m_documentLayout.pageGeometries.cend(); ++it) {
         const QRect pageGeometry = it.value();
         if (pageGeometry.intersects(d->m_viewport)) { // page needs to be painted
             painter.fillRect(pageGeometry, Qt::white);
@@ -471,8 +572,9 @@ void QPdfView::paintEvent(QPaintEvent *event)
 void QPdfView::resizeEvent(QResizeEvent *event)
 {
     Q_D(QPdfView);
-
+#ifndef QML_BUILD
     QAbstractScrollArea::resizeEvent(event);
+#endif
 
     d->updateScrollBars();
     d->calculateViewport();
@@ -481,9 +583,9 @@ void QPdfView::resizeEvent(QResizeEvent *event)
 void QPdfView::scrollContentsBy(int dx, int dy)
 {
     Q_D(QPdfView);
-
+#ifndef QML_BUILD
     QAbstractScrollArea::scrollContentsBy(dx, dy);
-
+#endif
     d->calculateViewport();
 }
 

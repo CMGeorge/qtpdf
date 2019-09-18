@@ -38,26 +38,42 @@
 #define QPDFVIEW_H
 
 #include <QtPdfWidgets/qtpdfwidgetsglobal.h>
+#ifdef QML_BUILD
+#include <QQuickItem>
+#include <QQuickPaintedItem>
+#else
 #include <QtWidgets/qabstractscrollarea.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QPdfDocument;
 class QPdfPageNavigation;
 class QPdfViewPrivate;
-
-class Q_PDF_WIDGETS_EXPORT QPdfView : public QAbstractScrollArea
+class Q_PDF_WIDGETS_EXPORT QPdfView : public
+#ifdef QML_BUILD
+                                      QQuickPaintedItem
+#else
+                                      QAbstractScrollArea
+#endif
 {
     Q_OBJECT
 
-    Q_PROPERTY(QPdfDocument* document READ document WRITE setDocument NOTIFY documentChanged)
+    Q_PROPERTY(QPdfDocument *document READ document WRITE setDocument NOTIFY
+                   documentChanged)
 
-    Q_PROPERTY(PageMode pageMode READ pageMode WRITE setPageMode NOTIFY pageModeChanged)
+    Q_PROPERTY(PageMode pageMode READ pageMode WRITE setPageMode NOTIFY
+                   pageModeChanged)
     Q_PROPERTY(ZoomMode zoomMode READ zoomMode WRITE setZoomMode NOTIFY zoomModeChanged)
-    Q_PROPERTY(qreal zoomFactor READ zoomFactor WRITE setZoomFactor NOTIFY zoomFactorChanged)
+    Q_PROPERTY(qreal zoomFactor READ zoomFactor WRITE setZoomFactor NOTIFY
+                   zoomFactorChanged)
 
-    Q_PROPERTY(int pageSpacing READ pageSpacing WRITE setPageSpacing NOTIFY pageSpacingChanged)
-    Q_PROPERTY(QMargins documentMargins READ documentMargins WRITE setDocumentMargins NOTIFY documentMarginsChanged)
+    Q_PROPERTY(int pageSpacing READ pageSpacing WRITE setPageSpacing NOTIFY
+                   pageSpacingChanged)
+    Q_PROPERTY(QMargins documentMargins READ documentMargins WRITE
+                   setDocumentMargins NOTIFY documentMarginsChanged)
+
+    Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
 
 public:
     enum PageMode
@@ -67,15 +83,15 @@ public:
     };
     Q_ENUM(PageMode)
 
-    enum ZoomMode
-    {
-        CustomZoom,
-        FitToWidth,
-        FitInView
-    };
+    enum ZoomMode { CustomZoom, FitToWidth, FitInView };
     Q_ENUM(ZoomMode)
+#ifdef QML_BUILD
+    explicit QPdfView(QQuickItem *parent = nullptr);
+    void paint(QPainter *painter) override;
 
+#elif
     explicit QPdfView(QWidget *parent = nullptr);
+#endif
     ~QPdfView();
 
     void setDocument(QPdfDocument *document);
@@ -93,10 +109,14 @@ public:
     QMargins documentMargins() const;
     void setDocumentMargins(QMargins margins);
 
+    QString url() const { return m_url; }
+
 public Q_SLOTS:
     void setPageMode(PageMode mode);
     void setZoomMode(ZoomMode mode);
     void setZoomFactor(qreal factor);
+
+    void setUrl(QString url);
 
 Q_SIGNALS:
     void documentChanged(QPdfDocument *document);
@@ -106,15 +126,24 @@ Q_SIGNALS:
     void pageSpacingChanged(int pageSpacing);
     void documentMarginsChanged(QMargins documentMargins);
 
-protected:
-    explicit QPdfView(QPdfViewPrivate &, QWidget *);
+    void urlChanged(QString url);
 
+protected:
+#ifdef QML_BUILD
+    explicit QPdfView(QPdfViewPrivate &, QQuickItem *);
+    void paintEvent(QPaintEvent *event);   // NOT IN USE
+    void resizeEvent(QResizeEvent *event); // NOT IN USE
+    void scrollContentsBy(int dx, int dy); // NOT IN USE
+#elif
+    explicit QPdfView(QPdfViewPrivate &, QWidget *);
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void scrollContentsBy(int dx, int dy) override;
+#endif
 
 private:
     Q_DECLARE_PRIVATE(QPdfView)
+    QString m_url;
 };
 
 QT_END_NAMESPACE

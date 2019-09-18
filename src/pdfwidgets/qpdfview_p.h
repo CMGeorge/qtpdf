@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 Klarälvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Tobias König <tobias.koenig@kdab.com>
+** Copyright (C) 2017 Klarälvdalens Datakonsult AB, a KDAB Group company,
+*info@kdab.com, author Tobias König <tobias.koenig@kdab.com>
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtPDF module of the Qt Toolkit.
@@ -51,15 +52,27 @@
 #include "qpdfview.h"
 
 #include <QPointer>
+#ifdef QML_BUILD
+#include <QQuickPaintedItem>
+#include <QtQuick/private/qquickpainteditem_p.h>
+#else
 #include <QtWidgets/private/qabstractscrollarea_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QPdfPageRenderer;
 
-class QPdfViewPrivate : public QAbstractScrollAreaPrivate
+class QPdfViewPrivate :
+#ifdef QML_BUILD
+    public QQuickPaintedItemPrivate
+#else
+    public QAbstractScrollAreaPrivate
+#endif
 {
+    //#ifndef QML_BUILD
     Q_DECLARE_PUBLIC(QPdfView)
+    //#endif
 
 public:
     QPdfViewPrivate();
