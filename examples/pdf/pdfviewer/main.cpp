@@ -37,10 +37,11 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QUrl>
-
+#include <QtWebEngine>
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
     MainWindow w;
     QStringList args = a.arguments();
     w.show();

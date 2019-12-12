@@ -74,7 +74,8 @@ class Q_PDF_WIDGETS_EXPORT QPdfView : public
                    setDocumentMargins NOTIFY documentMarginsChanged)
 
     Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
-
+    Q_PROPERTY(QPdfPageNavigation *pageNavigation READ pageNavigation WRITE
+                   setPageNavigation NOTIFY pageNavigationChanged)
 public:
     enum PageMode
     {
@@ -89,15 +90,13 @@ public:
     explicit QPdfView(QQuickItem *parent = nullptr);
     void paint(QPainter *painter) override;
 
-#elif
+#else
     explicit QPdfView(QWidget *parent = nullptr);
 #endif
     ~QPdfView();
 
     void setDocument(QPdfDocument *document);
     QPdfDocument *document() const;
-
-    QPdfPageNavigation *pageNavigation() const;
 
     PageMode pageMode() const;
     ZoomMode zoomMode() const;
@@ -111,13 +110,17 @@ public:
 
     QString url() const { return m_url; }
 
+    QPdfPageNavigation *pageNavigation();
+
 public Q_SLOTS:
+    //    QPdfPageNavigation *pageNavigation() const;
     void setPageMode(PageMode mode);
     void setZoomMode(ZoomMode mode);
     void setZoomFactor(qreal factor);
 
     void setUrl(QString url);
 
+    void setPageNavigation(QPdfPageNavigation *pageNavigation);
 Q_SIGNALS:
     void documentChanged(QPdfDocument *document);
     void pageModeChanged(PageMode pageMode);
@@ -128,13 +131,15 @@ Q_SIGNALS:
 
     void urlChanged(QString url);
 
+    void pageNavigationChanged(QPdfPageNavigation *pageNavigation);
+
 protected:
 #ifdef QML_BUILD
     explicit QPdfView(QPdfViewPrivate &, QQuickItem *);
     void paintEvent(QPaintEvent *event);   // NOT IN USE
     void resizeEvent(QResizeEvent *event); // NOT IN USE
     void scrollContentsBy(int dx, int dy); // NOT IN USE
-#elif
+#else
     explicit QPdfView(QPdfViewPrivate &, QWidget *);
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
@@ -144,6 +149,10 @@ protected:
 private:
     Q_DECLARE_PRIVATE(QPdfView)
     QString m_url;
+    QPdfPageNavigation *m_pageNavigation;
+#ifdef QML_BUILD
+    QQuickItem *m_parent;
+#endif
 };
 
 QT_END_NAMESPACE

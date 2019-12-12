@@ -106,6 +106,7 @@ void QPdfViewPrivate::calculateViewport()
 {
     Q_Q(QPdfView);
 #ifdef QML_BUILD
+    //    qDebug()<<
     const int x = 0;
     const int y = 0;
     const int width = q->width();
@@ -193,7 +194,7 @@ void QPdfViewPrivate::pageRendered(int pageNumber, QSize imageSize, const QImage
 
 #ifdef QML_BUILD
     q->update();
-#elif
+#else
     q->viewport()->update();
 #endif
 }
@@ -211,7 +212,7 @@ void QPdfViewPrivate::invalidatePageCache()
     m_pageCache.clear();
 #ifdef QML_BUILD
     q->update();
-#elif
+#else
     q->viewport()->update();
 #endif
 }
@@ -310,14 +311,16 @@ qreal QPdfViewPrivate::yPositionForPage(int pageNumber) const
 void QPdfViewPrivate::updateDocumentLayout()
 {
     m_documentLayout = calculateDocumentLayout();
+    qDebug() << "Document Layout: " << m_documentLayout.pageGeometries
+             << m_documentLayout.documentSize;
 
     updateScrollBars();
 }
 
 #ifdef QML_BUILD
 QPdfView::QPdfView(QQuickItem *parent)
-    : QQuickPaintedItem(*new QPdfViewPrivate(), parent)
-#elif
+    : QQuickPaintedItem(*new QPdfViewPrivate(), parent), m_parent(parent)
+#else
 QPdfView::QPdfView(QWidget *parent)
     : QAbstractScrollArea(*new QPdfViewPrivate(), parent)
 #endif
@@ -327,12 +330,16 @@ QPdfView::QPdfView(QWidget *parent)
     d->init();
 
     connect(d->m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this,
-            [d](int page) { d->currentPageChanged(page); });
+            [d](int page) {
+                qDebug() << "Current page changed render page";
+                d->currentPageChanged(page);
+            });
 
     connect(d->m_pageRenderer, &QPdfPageRenderer::pageRendered, this,
             [d](int pageNumber, QSize imageSize, const QImage &image,
                 QPdfDocumentRenderOptions, quint64 requestId) {
                 d->pageRendered(pageNumber, imageSize, image, requestId);
+                qDebug() << "Dhoulf render page";
             });
     qDebug() << "CALLED ";
 #ifndef QML_BUILD
@@ -356,7 +363,7 @@ QPdfView::QPdfView(QPdfViewPrivate &dd, QWidget *parent)
 #endif
 {
 }
-
+#ifdef QML_BUILD
 void QPdfView::paint(QPainter *painter) {
     Q_D(QPdfView);
     qDebug() << "In Paint...";
@@ -365,23 +372,28 @@ void QPdfView::paint(QPainter *painter) {
     for (auto it = d->m_documentLayout.pageGeometries.cbegin();
          it != d->m_documentLayout.pageGeometries.cend(); ++it) {
         const QRect pageGeometry = it.value();
-        //        if (pageGeometry.intersects(d->m_viewport)) { // page needs to
-        //        be painted
-        painter->fillRect(pageGeometry, Qt::white);
-        const int page = it.key();
-        qDebug() << " m_pageCache " << d->m_pageCache;
-        const auto pageIt = d->m_pageCache.constFind(page);
-        if (pageIt != d->m_pageCache.cend()) {
-            qDebug() << "Should precess page... ";
-            const QImage &img = pageIt.value();
-            painter->drawImage(pageGeometry.topLeft(), img);
-        } else {
-            d->m_pageRenderer->requestPage(page, pageGeometry.size());
+        qDebug() << parentItem();
+        //        qDebug() << QRect(0, 0, m_parent->size().width(),
+        //                          m_parent->size().height());
+        if (pageGeometry.intersects(
+                QRect(0, 0, parentItem()->size().width(),
+                      parentItem()->size().height()))) { // page needs to
+            //        be painted
+            painter->fillRect(pageGeometry, Qt::white);
+            const int page = it.key();
+            qDebug() << " m_pageCache " << d->m_pageCache;
+            const auto pageIt = d->m_pageCache.constFind(page);
+            if (pageIt != d->m_pageCache.cend()) {
+                qDebug() << "Should precess page... ";
+                const QImage &img = pageIt.value();
+                painter->drawImage(pageGeometry.topLeft(), img);
+            } else {
+                d->m_pageRenderer->requestPage(page, pageGeometry.size());
+            }
         }
-        //}
     }
 }
-
+#endif
 QPdfView::~QPdfView()
 {
 }
@@ -408,6 +420,10 @@ void QPdfView::setDocument(QPdfDocument *document)
     d->m_pageRenderer->setDocument(d->m_document);
 
     d->documentStatusChanged();
+    //    qDebug() << d->m_documentLayout.documentSize;
+#ifdef QML_BUILD
+    setSize(d->m_documentLayout.documentSize);
+#endif
 }
 
 QPdfDocument *QPdfView::document() const
@@ -415,13 +431,6 @@ QPdfDocument *QPdfView::document() const
     Q_D(const QPdfView);
 
     return d->m_document;
-}
-
-QPdfPageNavigation *QPdfView::pageNavigation() const
-{
-    Q_D(const QPdfView);
-
-    return d->m_pageNavigation;
 }
 
 QPdfView::PageMode QPdfView::pageMode() const
@@ -462,8 +471,19 @@ void QPdfView::setUrl(QString url) {
     _newPDF->load("/Users/cmgeorge/Downloads/printpreview.pdf");
     setDocument(_newPDF);
 }
-void QPdfView::setZoomMode(ZoomMode mode)
+
+void QPdfView::setPageNavigation(QPdfPageNavigation *pageNavigation)
+
 {
+    Q_D(QPdfView);
+    if (d->m_pageNavigation == pageNavigation)
+        return;
+
+    d->m_pageNavigation = pageNavigation;
+    emit pageNavigationChanged(d->m_pageNavigation);
+}
+
+void QPdfView::setZoomMode(ZoomMode mode) {
     Q_D(QPdfView);
 
     if (d->m_zoomMode == mode)
@@ -535,6 +555,11 @@ void QPdfView::setDocumentMargins(QMargins margins)
     emit documentMarginsChanged(d->m_documentMargins);
 }
 
+QPdfPageNavigation *QPdfView::pageNavigation() {
+    Q_D(QPdfView);
+    return d->m_pageNavigation;
+}
+
 void QPdfView::paintEvent(QPaintEvent *event)
 {
     Q_D(QPdfView);
@@ -542,11 +567,12 @@ void QPdfView::paintEvent(QPaintEvent *event)
     QPainter painter(nullptr);
 #else
     QPainter painter(viewport());
+    qDebug() << "ViewPort id: " << viewport();
 #endif
 #ifdef QML_BUILD
     painter.fillRect(event->rect(), "darkgray");
     painter.translate(-d->x, -d->y);
-#elif
+#else
     painter.fillRect(event->rect(), palette().brush(QPalette::Dark));
     painter.translate(-d->m_viewport.x(), -d->m_viewport.y());
 #endif
@@ -588,7 +614,6 @@ void QPdfView::scrollContentsBy(int dx, int dy)
 #endif
     d->calculateViewport();
 }
-
 QT_END_NAMESPACE
 
 #include "moc_qpdfview.cpp"

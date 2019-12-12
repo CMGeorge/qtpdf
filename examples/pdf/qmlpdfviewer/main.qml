@@ -6,16 +6,25 @@ ApplicationWindow {
     visible: true
     width: 640
     height: 480
-    title: qsTr("Hello World 4")
+    title: qsTr("Hello World 5")
     ColumnLayout{
         anchors.fill: parent
-        QPDFView{
-            id: pdfViewer
+        Flickable{
             Layout.fillWidth: true
             Layout.fillHeight: true
-            url: "file:///Users/cmgeorge/Downloads/printpreview.pdf"
-            Component.onCompleted: {
-                update();
+            contentHeight: pdfViewer.height
+            contentWidth: pdfViewer.width
+            clip: true
+            QPDFView{
+                id: pdfViewer
+
+                antialiasing: true
+                onImplicitHeightChanged: console.debug("implicit "+implicitHeight)
+                onContentsSizeChanged: console.debug("New Contenrsize: "+contentsSize);
+                url: "file:///Users/cmgeorge/Downloads/printpreview.pdf"
+                Component.onCompleted: {
+                    update();
+                }
             }
         }
         RowLayout{
