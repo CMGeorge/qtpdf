@@ -1,4 +1,4 @@
-TARGET = QtPdf
+TARGET = pdf
 QT += gui core core-private
 QT_PRIVATE += network
 TEMPLATE = lib

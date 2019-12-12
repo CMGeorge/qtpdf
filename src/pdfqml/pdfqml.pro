@@ -1,9 +1,10 @@
-QT =  qml quick pdf
+QT =  qml quick
 TARGET  = qmlpdf
 TEMPLATE = lib
 CONFIG += plugin
 #CONFIG += staticlib
 
+LIBS += -L$$OUT_PWD/../../lib/ -lpdf
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use

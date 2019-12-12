@@ -1,6 +1,6 @@
 #include "PDFPlugin.h"
 #include "QPDFView.h"
-#include <QPdfPageNavigation>
+#include <QtPdf/QPdfPageNavigation>
 PDFPlugin::PDFPlugin() {}
 void PDFPlugin::registerTypes(const char *uri) {
     qDebug() << "URI IS: " << uri;
