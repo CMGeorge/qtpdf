@@ -17,11 +17,12 @@ ApplicationWindow {
             clip: true
             QPDFView{
                 id: pdfViewer
-
+                width: 816
+                height: 1056
                 antialiasing: true
                 onImplicitHeightChanged: console.debug("implicit "+implicitHeight)
                 onContentsSizeChanged: console.debug("New Contenrsize: "+contentsSize);
-                url: "file:///Users/cmgeorge/Downloads/printpreview.pdf"
+                url: "C:/Users/CMGeorge/Desktop/aaaaaaaaaaaaa.pdf"
                 Component.onCompleted: {
                     update();
                 }

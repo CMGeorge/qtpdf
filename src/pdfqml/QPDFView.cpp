@@ -179,23 +179,23 @@ void QPDFView::setUrl(const QString &url) {
         return;
     qDebug() << "Shoudl open:: " << url;
 
-    //    m_pageRenderer = new QPdfPageRenderer(q);
-    //    m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
-    m_document->load("/Users/cmgeorge/Downloads/printpreview.pdf");
+//        m_pageRenderer = new QPdfPageRenderer(q);
+//        m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
+    m_document->load(url);
     m_url = url;
     emit urlChanged(m_url);
 }
 
 void QPDFView::documentStatusChanged() {
-    qDebug() << "Document status changed";
+    qDebug() << "Document status changed "<<m_document;
     m_pageNavigation->setDocument(m_document);
     m_pageRenderer->setDocument(m_document);
     m_documentLayout = calculateDocumentLayout();
 
-    //    QQuickPaintedItem::updatePolish(); // QRect(0, 0, 1000, 1000));
+//        QQuickPaintedItem::updatePolish(); // QRect(0, 0, 1000, 1000));
 
-    //    updatePaintNode()
-    //    invalidatePageCache();
+        //updatePaintNode();
+//        invalidatePageCache();
 }
 
 void QPDFView::currentPageChanged(int currentPage) {

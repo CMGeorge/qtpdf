@@ -1,6 +1,6 @@
-TEMPLATE = app
+TEMPLATE = app a
 TARGET  = qmlpdfviewer
-QT += quick
+QT += quick pdf
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
