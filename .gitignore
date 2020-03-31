@@ -281,3 +281,10 @@ src/lib/lcms2.pri
 src/lib/libjpeg.pri
 src/lib/libopenjpeg.pri
 src/lib/zlib.pri
+mkspecs/modules/
+mkspecs/modules-inst/qt_lib_pdf.pri
+qml/ro/wesell/qmlpdf/qmldir
+src/pdf/qdoc_wrapper.bat
+tests/auto/qpdfbookmarkmodel/target_wrapper.bat
+tests/auto/
+mkspecs/modules-inst/

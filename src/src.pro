@@ -1,11 +1,14 @@
 TEMPLATE = subdirs
 
+
+SUBDIRS = lib \
+            src_pdf \
+            pdfqml
+
 src_pdf.subdir = pdf
 src_pdf.depends = lib
-
-SUBDIRS = lib src_pdf pdfqml
-
 pdfqml.depends = src_pdf
+
 # \
 #    pdfqml
 

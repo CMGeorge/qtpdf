@@ -3,9 +3,9 @@
 #include <QGuiApplication>
 
 #include <QPainter>
-#include <pdf/QPdfDocument>
-#include <pdf/QPdfPageNavigation>
-#include <pdf/QPdfPageRenderer>
+#include <QPdfDocument>
+#include <QPdfPageNavigation>
+#include <QPdfPageRenderer>
 #include <QScreen>
 
 QPDFView::QPDFView(QQuickItem *parent)

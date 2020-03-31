@@ -40,7 +40,7 @@
 #include "qtpdfglobal.h"
 
 #include <QObject>
-#include <pdf/QPdfDocumentRenderOptions>
+#include <QPdfDocumentRenderOptions>
 #include <QSize>
 
 QT_BEGIN_NAMESPACE

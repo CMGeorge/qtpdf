@@ -5,7 +5,7 @@ CONFIG += staticlib hide_symbols warn_off rtti_off exceptions_off c++11
 DEFINES += NOMINMAX
 CMAKE_MODULE_TESTS = '-'
 
-#load(qt_helper_lib)
+load(qt_helper_lib)
 
 unix:!mac: CONFIG -= debug_and_release
 

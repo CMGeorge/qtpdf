@@ -4,7 +4,9 @@ TEMPLATE = lib
 CONFIG += plugin
 #CONFIG += staticlib
 
-LIBS += -L$$OUT_PWD/../../lib/ -lpdf
+LIBS += -L$$OUT_PWD/../../lib/ -lqt5pdf
+INCLUDEPATH += $$OUT_PWD/../../include/QtPdf
+warning("Set Include Path" $$OUT_PWD/../../include);
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -33,10 +35,10 @@ HEADERS += \
 #!isEmpty(target.path): INSTALLS += target
 #qml.files = plugins.qml
 #qml.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins
-target.path += $$[QT_INSTALL_QML]/qml/$${TARGET}
+#target.path += $$[QT_INSTALL_QML]/qml/$${TARGET}
 #pluginfiles.path += $$[QT_INSTALL_EXAMPLES]/qml/qmlextensionplugins/imports/TimeExample
 TARGETPATH = ro/wesell/$${TARGET}
-INSTALLS += target #qml pluginfiles
+#INSTALLS += target #qml pluginfiles
 
 CONFIG += install_ok  # Do not cargo-cult this!
 load(qml_plugin)

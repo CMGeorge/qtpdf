@@ -1,5 +1,5 @@
 %modules = ( # path to module name map
-    "pdf" => "$basedir/src/pdf",
+    "QtPdf" => "$basedir/src/pdf",
     "QtPdfWidgets" => "$basedir/src/pdfwidgets",
 );
 # Module dependencies.
