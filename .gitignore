@@ -288,3 +288,4 @@ src/pdf/qdoc_wrapper.bat
 tests/auto/qpdfbookmarkmodel/target_wrapper.bat
 tests/auto/
 mkspecs/modules-inst/
+build/
