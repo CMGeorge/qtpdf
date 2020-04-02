@@ -10,9 +10,9 @@ class QPdfPageRenderer;
 class QPDFView : public QQuickPaintedItem {
     Q_OBJECT
     Q_PROPERTY(bool rightAligned READ isRightAligned WRITE setRightAligned
-                   NOTIFY rightAlignedChanged)
+               NOTIFY rightAlignedChanged)
     Q_PROPERTY(QPdfPageNavigation *pageNavigation READ pageNavigation WRITE
-                   setPageNavigation NOTIFY pageNavigationChanged)
+               setPageNavigation NOTIFY pageNavigationChanged)
     Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
 
     struct DocumentLayout {

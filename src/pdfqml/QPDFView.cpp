@@ -13,29 +13,26 @@
 #include <QScreen>
 
 QPDFView::QPDFView(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_document(new QPdfDocument),
-      m_pageMode(SinglePage), m_zoomMode(CustomZoom), m_zoomFactor(1.0),
-      m_pageCacheLimit(20),
+    : QQuickPaintedItem(parent),
+      m_document(nullptr),
+      m_pageMode(SinglePage),
+      m_zoomMode(CustomZoom),
+      m_zoomFactor(1.0),
 
       m_screenResolution(
           QGuiApplication::primaryScreen()->logicalDotsPerInch() / 72.0
           ),
+      m_pageCacheLimit(20),
+      m_pageRenderer(nullptr),
       m_pageNavigation(new QPdfPageNavigation){
 
     m_pageRenderer = new QPdfPageRenderer;
     m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
     //    m_pageRenderer->setRenderMode(QPdfPageRenderer::SingleThreadedRenderMode);
-    connect(m_document, &QPdfDocument::statusChanged, this,
-            [=]() {
-        qDebug()<<"QPdfDocument::statusChanged ";
-        documentStatusChanged();
-    });
-    connect(m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this,
-            [=](int page) {
-        qDebug()<<"QPdfDocument::currentPageChanged "<<page;
-        currentPageChanged(page);
-    });
 
+
+//    m_pageRenderer = new QPdfPageRenderer;
+//    m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
     connect(m_pageRenderer, &QPdfPageRenderer::pageRendered, this,
             [=](int pageNumber, QSize imageSize, const QImage &image,
             QPdfDocumentRenderOptions, quint64 requestId) {
@@ -207,6 +204,23 @@ void QPDFView::setUrl(const QString &url) {
 
     //        m_pageRenderer = new QPdfPageRenderer(q);
     //        m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
+//    if (m_pageRenderer) {
+//        m_pageRenderer->deleteLater();
+//        m_document->deleteLater();
+//    }
+    if (m_document) m_document->deleteLater();
+    m_document = new  QPdfDocument(this);
+    connect(m_document, &QPdfDocument::statusChanged, this,
+            [=]() {
+        qDebug()<<"QPdfDocument::statusChanged ";
+        documentStatusChanged();
+    });
+    connect(m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this,
+            [=](int page) {
+        qDebug()<<"QPdfDocument::currentPageChanged "<<page;
+        currentPageChanged(page);
+    });
+    m_pageRenderer->setDocument(m_document);
     if (url.startsWith("file:/")){
         QString _url(url);
 #ifdef Q_OS_WIN
