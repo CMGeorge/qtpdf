@@ -7,7 +7,7 @@ SUBDIRS = lib \
 
 src_pdf.subdir = pdf
 src_pdf.depends = lib
-pdfqml.depends = src_pdf
+pdfqml.depends = lib #src_pdf
 
 # \
 #    pdfqml

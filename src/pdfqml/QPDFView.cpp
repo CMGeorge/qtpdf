@@ -3,42 +3,64 @@
 #include <QGuiApplication>
 
 #include <QPainter>
-#include <QPdfDocument>
-#include <QPdfPageNavigation>
-#include <QPdfPageRenderer>
+#include "qpdfdocument.h"
+#include "qpdfpagenavigation.h"
+#include "qpdfpagerenderer.h"
+
+//#include <QPdfDocument>
+//#include <QPdfPageNavigation>
+//#include <QPdfPageRenderer>
 #include <QScreen>
 
 QPDFView::QPDFView(QQuickItem *parent)
-    : QQuickPaintedItem(parent), m_document(new QPdfDocument(this)),
-      m_pageMode(SinglePage), m_zoomMode(CustomZoom), m_zoomFactor(1.0),
-      m_pageNavigation(new QPdfPageNavigation(this)), m_pageCacheLimit(20),
+    : QQuickPaintedItem(parent),
+      m_document(nullptr),
+      m_pageMode(SinglePage),
+      m_zoomMode(CustomZoom),
+      m_zoomFactor(1.0),
+
       m_screenResolution(
-          QGuiApplication::primaryScreen()->logicalDotsPerInch() / 72.0) {
-    //    connect(this, &QPDFView::documentChanged, [=]() {
-
-    //    });
-    m_pageRenderer = new QPdfPageRenderer(this);
+          QGuiApplication::primaryScreen()->logicalDotsPerInch() / 72.0
+          ),
+      m_pageCacheLimit(20),
+      m_pageRenderer(nullptr),
+      m_pageNavigation(new QPdfPageNavigation){
+//    setSize(QSizeF(1,1));
+//    setWidth(400);
+    setImplicitWidth(1);
+    setImplicitHeight(1);
+    m_pageRenderer = new QPdfPageRenderer;
     m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
-    connect(m_document, &QPdfDocument::statusChanged, this,
-            [=]() { documentStatusChanged(); });
-    connect(m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this,
-            [=](int page) { currentPageChanged(page); });
+    //    m_pageRenderer->setRenderMode(QPdfPageRenderer::SingleThreadedRenderMode);
 
+
+//    m_pageRenderer = new QPdfPageRenderer;
+//    m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
     connect(m_pageRenderer, &QPdfPageRenderer::pageRendered, this,
             [=](int pageNumber, QSize imageSize, const QImage &image,
-                QPdfDocumentRenderOptions, quint64 requestId) {
-                qDebug() << "pageRendered CALLED";
-                pageRendered(pageNumber, imageSize, image, requestId);
-                update();
-            });
+            QPdfDocumentRenderOptions, quint64 requestId) {
+        qDebug() << "pageRendered CALLED";
+        pageRendered(pageNumber, imageSize, image, requestId);
+        update();
+    });
 
     //    d->calculateViewport();
 }
 
 void QPDFView::paint(QPainter *painter) {
-    qDebug() << "In Paint...";
-    qDebug() << "m_documentLayout = " << m_documentLayout.pageGeometries;
-    painter->fillRect(QRect(0, 0, size().width(), size().height()), "white");
+    qDebug() << "In Paint... 2";
+//    calculateDocumentLayout();
+//    QSize _explicitPageSize = m_documentLayout.pageGeometries.take(0).size();
+//    setImplicitSize(_explicitPageSize.width(),_explicitPageSize.height());
+//    qDebug()<<"Set size to explicit size: "<<_explicitPageSize;
+//    setSize(_explicitPageSize);
+    QRect _paintRect(0, 0,
+                     size().width(),
+                     size().height()
+                     );
+    painter->fillRect(_paintRect,
+                      "white");
+    qDebug()<<"Will Fill "<<_paintRect;
     for (auto it = m_documentLayout.pageGeometries.cbegin();
          it != m_documentLayout.pageGeometries.cend(); ++it) {
         const QRect pageGeometry = it.value();
@@ -46,13 +68,29 @@ void QPDFView::paint(QPainter *painter) {
         //        be painted
         painter->fillRect(pageGeometry, Qt::white);
         const int page = it.key();
-        qDebug() << " m_pageCache " << m_pageCache;
+        qDebug() << "QPDFView::paint  =  m_pageCache " << m_pageCache;
+
         const auto pageIt = m_pageCache.constFind(page);
         if (pageIt != m_pageCache.cend()) {
-            qDebug() << "Should precess page... ";
+            qDebug() << "Should precess page... "<<pageIt.value();
             const QImage &img = pageIt.value();
+            setImplicitSize(pageIt.value().size().width(),
+                            pageIt.value().size().height());
+//            setSize(pageIt.value().size());
             painter->drawImage(pageGeometry.topLeft(), img);
         } else {
+            qDebug()<<"Render new page";
+            QPdfDocumentRenderOptions options;
+            quint64 returnArg;
+            qRegisterMetaType<quint64>("quint64");
+            //            QMetaObject::invokeMethod(m_pageRenderer,
+            //                                      "requestPage",
+            //                                      Qt::DirectConnection,
+            //                                      Q_RETURN_ARG(quint64,returnArg),
+            //                                      Q_ARG(int,page),
+            //                                      Q_ARG(QSize,pageGeometry.size()),
+            //                                      Q_ARG(QPdfDocumentRenderOptions,options)
+            //                                      );
             m_pageRenderer->requestPage(page, pageGeometry.size());
         }
         //}
@@ -88,11 +126,11 @@ QPDFView::DocumentLayout QPDFView::calculateDocumentLayout() const {
     int totalWidth = 0;
 
     const int startPage =
-        (m_pageMode == QPDFView::SinglePage ? m_pageNavigation->currentPage()
-                                            : 0);
+            (m_pageMode == QPDFView::SinglePage ? m_pageNavigation->currentPage()
+                                                : 0);
     const int endPage = (m_pageMode == QPDFView::SinglePage
-                             ? m_pageNavigation->currentPage() + 1
-                             : pageCount);
+                         ? m_pageNavigation->currentPage() + 1
+                         : pageCount);
 
     //    return DocumentLayout();
     // calculate page sizes
@@ -103,24 +141,24 @@ QPDFView::DocumentLayout QPDFView::calculateDocumentLayout() const {
         if (m_zoomMode == QPDFView::CustomZoom) {
             pageSize = QSizeF(m_document->pageSize(page) * m_screenResolution *
                               m_zoomFactor)
-                           .toSize();
+                    .toSize();
             qDebug() << pageSize;
         } else if (m_zoomMode == QPDFView::FitToWidth) {
             pageSize = QSizeF(m_document->pageSize(page) * m_screenResolution)
-                           .toSize();
+                    .toSize();
             const qreal factor =
-                (qreal(m_viewport.width() - m_documentMargins.left() -
-                       m_documentMargins.right()) /
-                 qreal(pageSize.width()));
+                    (qreal(m_viewport.width() - m_documentMargins.left() -
+                           m_documentMargins.right()) /
+                     qreal(pageSize.width()));
             pageSize *= factor;
         } else if (m_zoomMode == QPDFView::FitInView) {
             const QSize viewportSize(
-                m_viewport.size() +
-                QSize(-m_documentMargins.left() - m_documentMargins.right(),
-                      -m_pageSpacing));
+                        m_viewport.size() +
+                        QSize(-m_documentMargins.left() - m_documentMargins.right(),
+                              -m_pageSpacing));
 
             pageSize = QSizeF(m_document->pageSize(page) * m_screenResolution)
-                           .toSize();
+                    .toSize();
             pageSize = pageSize.scaled(viewportSize, Qt::KeepAspectRatio);
         }
         pageSize = QSize(pageSize.width() * 2, pageSize.height() * 2);
@@ -139,7 +177,7 @@ QPDFView::DocumentLayout QPDFView::calculateDocumentLayout() const {
 
         // center horizontal inside the viewport
         const int pageX =
-            (qMax(totalWidth, m_viewport.width()) - pageSize.width()) / 2;
+                (qMax(totalWidth, m_viewport.width()) - pageSize.width()) / 2;
 
         pageGeometries[page].moveTopLeft(QPoint(pageX, pageY));
 
@@ -175,14 +213,49 @@ void QPDFView::pageRendered(int pageNumber, QSize imageSize,
 }
 
 void QPDFView::setUrl(const QString &url) {
+
     if (m_url == url)
         return;
-    qDebug() << "Shoudl open:: " << url;
+    qDebug() << "Shoudl 2 open:: " << url;
 
-//        m_pageRenderer = new QPdfPageRenderer(q);
-//        m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
-    m_document->load(url);
-    m_url = url;
+    //        m_pageRenderer = new QPdfPageRenderer(q);
+    //        m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
+//    if (m_pageRenderer) {
+//        m_pageRenderer->deleteLater();
+//        m_document->deleteLater();
+//    }
+    if (m_document) m_document->deleteLater();
+    m_document = new  QPdfDocument(this);
+    connect(m_document, &QPdfDocument::statusChanged, this,
+            [=]() {
+        qDebug()<<"QPdfDocument::statusChanged ";
+        documentStatusChanged();
+    });
+    connect(m_pageNavigation, &QPdfPageNavigation::currentPageChanged, this,
+            [=](int page) {
+        qDebug()<<"QPdfDocument::currentPageChanged "<<page;
+        currentPageChanged(page);
+    });
+    m_pageRenderer->setDocument(nullptr);
+    m_pageRenderer->setDocument(m_document);
+    if (url.startsWith("file:/")){
+        QString _url(url);
+#ifdef Q_OS_WIN
+        _url.replace("file:///","");
+        m_document->load(_url);
+        m_url = _url;
+#elif
+        _url.replace("file://","");
+        m_document->load(_url);
+        m_url = _url;
+#endif
+
+    }else{
+        m_document->load(url);
+        m_url = url;
+
+    }
+    qDebug()<<"Set LOad UEL :"<<m_url;
     emit urlChanged(m_url);
 }
 
@@ -192,16 +265,20 @@ void QPDFView::documentStatusChanged() {
     m_pageRenderer->setDocument(m_document);
     m_documentLayout = calculateDocumentLayout();
 
-//        QQuickPaintedItem::updatePolish(); // QRect(0, 0, 1000, 1000));
+    //        QQuickPaintedItem::updatePolish(); // QRect(0, 0, 1000, 1000));
 
-        //updatePaintNode();
-//        invalidatePageCache();
+    //updatePaintNode();
+            invalidatePageCache();
 }
 
 void QPDFView::currentPageChanged(int currentPage) {
     qDebug() << "Page changd to " << currentPage;
     if (m_pageMode == SinglePage)
         invalidateDocumentLayout();
+
+    qDebug() << "m_documentLayout = " << m_documentLayout.pageGeometries;
+
+
     //    calculateDocumentLayout();
     //    update();
     //    if (m_blockPageScrolling)
@@ -217,6 +294,7 @@ void QPDFView::invalidateDocumentLayout() {
 
 void QPDFView::updateDocumentLayout() {
     m_documentLayout = calculateDocumentLayout();
+    qCritical()<<"m_documentLayout ??  "<<m_documentLayout.pageGeometries;
 }
 
 void QPDFView::invalidatePageCache() {
