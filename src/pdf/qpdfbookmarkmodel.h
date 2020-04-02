@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 class QPdfDocument;
 class QPdfBookmarkModelPrivate;
 
-class /*Q_PDF_EXPORT*/ QPdfBookmarkModel : public QAbstractItemModel
+class Q_PDF_EXPORT QPdfBookmarkModel : public QAbstractItemModel
 {
     Q_OBJECT
 

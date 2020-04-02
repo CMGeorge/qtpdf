@@ -200,14 +200,31 @@ void QPDFView::pageRendered(int pageNumber, QSize imageSize,
 }
 
 void QPDFView::setUrl(const QString &url) {
+
     if (m_url == url)
         return;
-    qDebug() << "Shoudl open:: " << url;
+    qDebug() << "Shoudl 2 open:: " << url;
 
     //        m_pageRenderer = new QPdfPageRenderer(q);
     //        m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
-    m_document->load(url);
-    m_url = url;
+    if (url.startsWith("file:/")){
+        QString _url(url);
+#ifdef Q_OS_WIN
+        _url.replace("file:///","");
+        m_document->load(_url);
+        m_url = _url;
+#elif
+        _url.replace("file://","");
+        m_document->load(_url);
+        m_url = _url;
+#endif
+
+    }else{
+        m_document->load(url);
+        m_url = url;
+
+    }
+    qDebug()<<"Set LOad UEL :"<<m_url;
     emit urlChanged(m_url);
 }
 
