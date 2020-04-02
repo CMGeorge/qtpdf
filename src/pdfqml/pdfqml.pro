@@ -6,9 +6,10 @@ CONFIG += plugin
 
 #LIBS += -L$$OUT_PWD/../../lib/ -lqt5pdf
 #INCLUDEPATH += $$OUT_PWD/../../include/QtPdf
-warning("Set Include Path" $$OUT_PWD/../../include);
+#warning("Set Include Path" $$OUT_PWD/../../include);
 CONFIG += c++11
-
+DEFINES += Q_PDF_EXPORT
+MODULE_BASE_OUTDIR = $$OUT_PWD/../../
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the

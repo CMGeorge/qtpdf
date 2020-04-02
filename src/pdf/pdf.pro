@@ -1,5 +1,5 @@
 TARGET = QtPdf
-QT += gui core core-private widgets
+QT += gui core
 QT_PRIVATE += network
 TEMPLATE = lib
 
@@ -9,8 +9,6 @@ TEMPLATE = lib
 #INCLUDEPATH += $$QTPDF_ROOT/src/3rdparty/pdfium
 #INCLUDEPATH += $$QTPDF_ROOT/src/3rdparty/pdfium/third_party/freetype/include
 load(qt_module)
-
-LIBS_PRIVATE += -L$$MODULE_BASE_OUTDIR/lib -lqtpdfium$$qtPlatformTargetSuffix()
 
 QMAKE_DOCS = $$PWD/doc/qtpdf.qdocconf
 

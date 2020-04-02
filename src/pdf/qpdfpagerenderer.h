@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 class QPdfDocument;
 class QPdfPageRendererPrivate;
 
-class Q_PDF_EXPORT QPdfPageRenderer : public QObject
+class /*Q_PDF_EXPORT*/ QPdfPageRenderer : public QObject
 {
     Q_OBJECT
 

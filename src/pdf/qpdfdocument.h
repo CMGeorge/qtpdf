@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 class QPdfDocumentPrivate;
 class QNetworkReply;
 
-class Q_PDF_EXPORT QPdfDocument : public QObject
+class /*Q_PDF_EXPORT*/ QPdfDocument : public QObject
 {
     Q_OBJECT
 

@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 class QPdfDocument;
 class QPdfPageNavigationPrivate;
 
-class Q_PDF_EXPORT QPdfPageNavigation : public QObject
+class /*Q_PDF_EXPORT*/ QPdfPageNavigation : public QObject
 {
     Q_OBJECT
 

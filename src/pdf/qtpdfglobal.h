@@ -51,8 +51,8 @@ QT_BEGIN_NAMESPACE
 #  else
 #    define Q_PDF_EXPORT
 #  endif
-#else
-#define Q_PDF_EXPORT
+//#else
+//#define Q_PDF_EXPORT
 #endif
 
 QT_END_NAMESPACE

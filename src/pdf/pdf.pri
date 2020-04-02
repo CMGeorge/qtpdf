@@ -1,14 +1,15 @@
+QT += core-private
+
 CONFIG += c++11
 CONFIG -= precompile_header # Not supported by upstream header files
 win32: DEFINES += NOMINMAX
 INCLUDEPATH += $$QTPDF_ROOT/src/3rdparty/pdfium/fpdfsdk/include
 INCLUDEPATH += $$QTPDF_ROOT/src/3rdparty/pdfium
 INCLUDEPATH += $$QTPDF_ROOT/src/3rdparty/pdfium/third_party/freetype/include
-#load(qt_module)
-
-DEFINES +=Q_PDF_EXPORT
 
 LIBS_PRIVATE += -L$$MODULE_BASE_OUTDIR/lib -lqtpdfium$$qtPlatformTargetSuffix()
+
+#load(qt_module)
 
 #QMAKE_DOCS = $$PWD/doc/qtpdf.qdocconf
 
