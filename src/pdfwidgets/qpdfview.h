@@ -37,7 +37,7 @@
 #ifndef QPDFVIEW_H
 #define QPDFVIEW_H
 
-#include <QtPdfWidgets/qtpdfwidgetsglobal.h>
+#include <qtpdfwidgetsglobal.h>
 #ifdef QML_BUILD
 #include <QQuickItem>
 #include <QQuickPaintedItem>

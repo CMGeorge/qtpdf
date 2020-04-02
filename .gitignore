@@ -289,3 +289,4 @@ tests/auto/qpdfbookmarkmodel/target_wrapper.bat
 tests/auto/
 mkspecs/modules-inst/
 build/
+build_5_14_1/
