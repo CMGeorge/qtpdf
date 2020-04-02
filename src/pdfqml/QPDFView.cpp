@@ -25,7 +25,10 @@ QPDFView::QPDFView(QQuickItem *parent)
       m_pageCacheLimit(20),
       m_pageRenderer(nullptr),
       m_pageNavigation(new QPdfPageNavigation){
-
+//    setSize(QSizeF(1,1));
+//    setWidth(400);
+    setImplicitWidth(1);
+    setImplicitHeight(1);
     m_pageRenderer = new QPdfPageRenderer;
     m_pageRenderer->setRenderMode(QPdfPageRenderer::MultiThreadedRenderMode);
     //    m_pageRenderer->setRenderMode(QPdfPageRenderer::SingleThreadedRenderMode);
@@ -46,9 +49,18 @@ QPDFView::QPDFView(QQuickItem *parent)
 
 void QPDFView::paint(QPainter *painter) {
     qDebug() << "In Paint... 2";
-    qDebug() << "m_documentLayout = " << m_documentLayout.pageGeometries;
-    painter->fillRect(QRect(0, 0, size().width(), size().height()),
+//    calculateDocumentLayout();
+//    QSize _explicitPageSize = m_documentLayout.pageGeometries.take(0).size();
+//    setImplicitSize(_explicitPageSize.width(),_explicitPageSize.height());
+//    qDebug()<<"Set size to explicit size: "<<_explicitPageSize;
+//    setSize(_explicitPageSize);
+    QRect _paintRect(0, 0,
+                     size().width(),
+                     size().height()
+                     );
+    painter->fillRect(_paintRect,
                       "white");
+    qDebug()<<"Will Fill "<<_paintRect;
     for (auto it = m_documentLayout.pageGeometries.cbegin();
          it != m_documentLayout.pageGeometries.cend(); ++it) {
         const QRect pageGeometry = it.value();
@@ -57,10 +69,14 @@ void QPDFView::paint(QPainter *painter) {
         painter->fillRect(pageGeometry, Qt::white);
         const int page = it.key();
         qDebug() << "QPDFView::paint  =  m_pageCache " << m_pageCache;
+
         const auto pageIt = m_pageCache.constFind(page);
         if (pageIt != m_pageCache.cend()) {
-            qDebug() << "Should precess page... ";
+            qDebug() << "Should precess page... "<<pageIt.value();
             const QImage &img = pageIt.value();
+            setImplicitSize(pageIt.value().size().width(),
+                            pageIt.value().size().height());
+//            setSize(pageIt.value().size());
             painter->drawImage(pageGeometry.topLeft(), img);
         } else {
             qDebug()<<"Render new page";
@@ -220,6 +236,7 @@ void QPDFView::setUrl(const QString &url) {
         qDebug()<<"QPdfDocument::currentPageChanged "<<page;
         currentPageChanged(page);
     });
+    m_pageRenderer->setDocument(nullptr);
     m_pageRenderer->setDocument(m_document);
     if (url.startsWith("file:/")){
         QString _url(url);
@@ -251,13 +268,17 @@ void QPDFView::documentStatusChanged() {
     //        QQuickPaintedItem::updatePolish(); // QRect(0, 0, 1000, 1000));
 
     //updatePaintNode();
-    //        invalidatePageCache();
+            invalidatePageCache();
 }
 
 void QPDFView::currentPageChanged(int currentPage) {
     qDebug() << "Page changd to " << currentPage;
     if (m_pageMode == SinglePage)
         invalidateDocumentLayout();
+
+    qDebug() << "m_documentLayout = " << m_documentLayout.pageGeometries;
+
+
     //    calculateDocumentLayout();
     //    update();
     //    if (m_blockPageScrolling)
@@ -273,6 +294,7 @@ void QPDFView::invalidateDocumentLayout() {
 
 void QPDFView::updateDocumentLayout() {
     m_documentLayout = calculateDocumentLayout();
+    qCritical()<<"m_documentLayout ??  "<<m_documentLayout.pageGeometries;
 }
 
 void QPDFView::invalidatePageCache() {
