@@ -22,9 +22,10 @@ ApplicationWindow {
                 antialiasing: true
                 onImplicitHeightChanged: console.debug("implicit "+implicitHeight)
                 onContentsSizeChanged: console.debug("New Contenrsize: "+contentsSize);
-                url: "C:/Users/CMGeorge/Desktop/aaaaaaaaaaaaa.pdf"
+//                url: "D:/georg/Downloads/SampleForm.pdf"
                 Component.onCompleted: {
-                    update();
+//                    pdfViewer.url = "D:/georg/Downloads/SampleForm.pdf"
+//                    update();
                 }
             }
         }
@@ -51,6 +52,14 @@ ApplicationWindow {
                 text: "Forward"
                 enabled: pdfViewer.pageNavigation.currentPage<pdfViewer.pageNavigation.pageCount
                 onClicked: pdfViewer.pageNavigation.goToNextPage()
+            }
+            Button{
+                text: "Load";
+                onClicked:  {
+
+                    pdfViewer.url = "D:/georg/Downloads/SampleForm.pdf"
+                    pdfViewer.update();
+                }
             }
         }
     }
