@@ -244,7 +244,7 @@ void QPDFView::setUrl(const QString &url) {
         _url.replace("file:///","");
         m_document->load(_url);
         m_url = _url;
-#elif
+#else
         _url.replace("file://","");
         m_document->load(_url);
         m_url = _url;
