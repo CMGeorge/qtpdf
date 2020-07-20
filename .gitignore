@@ -290,3 +290,5 @@ tests/auto/
 mkspecs/modules-inst/
 build/
 build_5_14_1/
+build_5_14_2
+build_5_15
